@@ -8,7 +8,7 @@ trigger:
 
 variables:
 - group: terraformVariableGroup  # non-secret values
-- group: secretVariables
+- group: secretVariableGroup
 
 pool:
   vmImage: ubuntu-latest

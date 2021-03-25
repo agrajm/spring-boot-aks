@@ -40,3 +40,6 @@ build/
 **/*.lock.hcl
 **/.terraform
 *.tfvars
+
+## Spring Properties ##
+**/*dev.properties

@@ -7,7 +7,6 @@ trigger:
 - master
 
 variables:
-  - group: buildVariableGroup      # variables for build pipeline (terraform state)
   - group: terraformVariableGroup  # non-secret values
   - group: secretVariables
 

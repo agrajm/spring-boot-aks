@@ -17,6 +17,7 @@ steps:
     targetFiles: |
       **/application.properties
     actionOnMissing: 'log warning'
+    
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'

@@ -6,6 +6,11 @@
 trigger:
 - master
 
+variables:
+  - group: buildVariableGroup      # variables for build pipeline (terraform state)
+  - group: terraformVariableGroup  # non-secret values
+  - group: secretVariables
+
 pool:
   vmImage: ubuntu-latest
 
@@ -17,6 +22,9 @@ steps:
     targetFiles: |
       **/application.properties
     actionOnMissing: 'log warning'
+    tokenPrefix: '#{'
+    tokenSuffix: '}#'
+    verbosity: 'detailed'
     
 - task: Maven@3
   inputs:

@@ -13,25 +13,61 @@ variables:
 pool:
   vmImage: ubuntu-latest
 
-steps:
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - job: Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+      displayName: 'Replace tokens'
+      inputs:
+        targetFiles: |
+          **/application.properties
+        actionOnMissing: 'log warning'
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
+        verbosity: 'detailed'
 
-- task: qetza.replacetokens.replacetokens-task.replacetokens@3
-  displayName: 'Replace tokens'
-  inputs:
-    targetFiles: |
-      **/application.properties
-    actionOnMissing: 'log warning'
-    tokenPrefix: '#{'
-    tokenSuffix: '}#'
-    verbosity: 'detailed'
-    
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.11'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+    - task: Maven@3
+      inputs:
+        mavenPomFile: 'pom.xml'
+        mavenOptions: '-Xmx3072m'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.11'
+        jdkArchitectureOption: 'x64'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        goals: 'package'
+
+    - task: AzureCLI@2
+      displayName: "Build & push the Docker Image"
+      inputs:
+        azureSubscription: azureServiceConnection
+        scriptType: bash
+        scriptLocation: inlineScript
+        failOnStandardError: true
+        inlineScript: |
+          az acr login -n $(ACR_NAME)
+          az acr build -t agrajm/spring-boot-aks:$(Build.BuildNumber) -r {ACR_NAME}
+
+
+- stage: deploy
+  displayName: Deploy
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - job: Deploy
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: AzureCLI@2
+      displayName: "Build & push the Docker Image"
+      inputs:
+        azureSubscription: azureServiceConnection
+        scriptType: bash
+        scriptLocation: inlineScript
+        failOnStandardError: true
+        inlineScript: |
+          echo "the build number in deploy is $(Build.BuildNumber)"

@@ -22,7 +22,7 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - task: qetza.replacetokens.replacetokens-task.replacetokens@3
-      displayName: 'Replace tokens'
+      displayName: 'Replace tokens by secrets'
       inputs:
         targetFiles: |
           **/application.properties
@@ -32,6 +32,7 @@ stages:
         verbosity: 'detailed'
 
     - task: Maven@3
+      displayName: 'Build & Run Test Cases'
       inputs:
         mavenPomFile: 'pom.xml'
         mavenOptions: '-Xmx3072m'
@@ -51,8 +52,7 @@ stages:
         failOnStandardError: true
         inlineScript: |
           az acr login -n $(ACR_NAME)
-          az acr build -t agrajm/spring-boot-aks:$(Build.BuildNumber) -r {ACR_NAME}
-
+          az acr build -t agrajm/spring-boot-aks:$(Build.BuildNumber) -r {ACR_NAME} .
 
 - stage: deploy
   displayName: Deploy
@@ -63,7 +63,7 @@ stages:
       vmImage: ubuntu-latest
     steps:
     - task: AzureCLI@2
-      displayName: "Build & push the Docker Image"
+      displayName: "Update the Deployment with Latest Image & deploy to AKS"
       inputs:
         azureSubscription: azureServiceConnection
         scriptType: bash

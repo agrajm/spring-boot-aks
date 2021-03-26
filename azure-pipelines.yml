@@ -52,7 +52,7 @@ stages:
         failOnStandardError: true
         inlineScript: |
           az acr login -n $(ACR_NAME)
-          az acr build -t agrajm/spring-boot-aks:$(Build.BuildNumber) -r {ACR_NAME} .
+          az acr build -t agrajm/spring-boot-aks:$(Build.BuildNumber) -r $(ACR_NAME) .
 
 - stage: deploy
   displayName: Deploy
@@ -71,3 +71,5 @@ stages:
         failOnStandardError: true
         inlineScript: |
           echo "the build number in deploy is $(Build.BuildNumber)"
+          echo "Todo: Add deployment steps"
+          echo "Todo: Explore Approvals & Environments" 

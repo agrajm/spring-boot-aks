@@ -74,3 +74,12 @@ stages:
           echo "the build number in deploy is $(Build.BuildNumber)"
           echo "Todo: Add deployment steps"
           echo "Todo: Explore Approvals & Environments"
+    - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+      displayName: 'Replace tokens by secrets'
+      inputs:
+        targetFiles: |
+          **/application.properties
+        actionOnMissing: 'log warning'
+        tokenPrefix: '%{'
+        tokenSuffix: '}%'
+        verbosity: 'detailed'

@@ -44,7 +44,9 @@ stages:
         goals: 'package'
 
     - task: AzureCLI@2
-      displayName: "Build & push the Docker Image"
+      displayName: "Docker Build & Push"
+      env:
+        ACR_REPO_NAME=spring-boot-aks
       inputs:
         azureSubscription: azureServiceConnection
         scriptType: bash
@@ -52,7 +54,8 @@ stages:
         failOnStandardError: true
         inlineScript: |
           az acr login -n $(ACR_NAME)
-          az acr build -t agrajm/spring-boot-aks:$(Build.BuildNumber) -r $(ACR_NAME) .
+          docker build -t $(ACR_NAME)/$(ACR_REPO_NAME):$(Build.BuildNumber) .
+          docker push $(ACR_NAME)/$(ACR_REPO_NAME):$(Build.BuildNumber)
 
 - stage: deploy
   displayName: Deploy
@@ -72,4 +75,4 @@ stages:
         inlineScript: |
           echo "the build number in deploy is $(Build.BuildNumber)"
           echo "Todo: Add deployment steps"
-          echo "Todo: Explore Approvals & Environments" 
+          echo "Todo: Explore Approvals & Environments"

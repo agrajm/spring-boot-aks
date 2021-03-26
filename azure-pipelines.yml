@@ -52,7 +52,6 @@ stages:
         failOnStandardError: true
         inlineScript: |
           az acr login -n $(ACR_NAME)
-          export ACR_LOGIN_SERVER=$(ACR_NAME).azurecr.io
           docker build -t $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber) .
           docker push $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)
 

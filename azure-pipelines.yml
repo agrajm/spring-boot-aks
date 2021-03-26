@@ -45,8 +45,6 @@ stages:
 
     - task: AzureCLI@2
       displayName: "Docker Build & Push"
-      env:
-        ACR_REPO_NAME=spring-boot-aks
       inputs:
         azureSubscription: azureServiceConnection
         scriptType: bash
@@ -54,8 +52,9 @@ stages:
         failOnStandardError: true
         inlineScript: |
           az acr login -n $(ACR_NAME)
-          docker build -t $(ACR_NAME)/$(ACR_REPO_NAME):$(Build.BuildNumber) .
-          docker push $(ACR_NAME)/$(ACR_REPO_NAME):$(Build.BuildNumber)
+          export ACR_LOGIN_SERVER=$(ACR_NAME).azurecr.io
+          docker build -t $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber) .
+          docker push $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)
 
 - stage: deploy
   displayName: Deploy

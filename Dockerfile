@@ -1,8 +1,5 @@
 FROM openjdk:15-jdk-slim as bulid
 
-RUN addgroup demogroup && adduser  --ingroup demogroup --disabled-password demo
-USER demo
-
 WORKDIR application
 
 COPY mvnw .

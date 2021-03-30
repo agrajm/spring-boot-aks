@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:experimental
-
 FROM openjdk:15-jdk-slim as bulid
 
 RUN addgroup demogroup && adduser  --ingroup demogroup --disabled-password demo
@@ -12,7 +10,7 @@ COPY .mvn .mvn
 COPY pom.xml .
 COPY src src
 
-RUN --mount=type=cache,target=/root/.m2 ./mvnw  install -DskipTests
+RUN ./mvnw package
 
 RUN cp /application/target/*.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract

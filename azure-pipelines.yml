@@ -86,7 +86,7 @@ stages:
                 failOnStandardError: true
                 inlineScript: |
                   echo "the build number in deploy is $(Build.BuildNumber)"
-                  az aks show --name $(AKS_CLUSTER_NAME) --resource-group $(AKS_RESOURCE_GROUP)
+                  az aks show --name $(AKS_CLUSTER_NAME) --resource-group $(RESOURCE_GROUP_NAME)
                   echo "kube config is $KUBECONFIG"
                   export KUBECONFIG=$(pwd)/.kubeconfig-$(AKS_CLUSTER_NAME)
                   wget https://github.com/Azure/kubelogin/releases/download/v0.0.9/kubelogin-linux-amd64.zip

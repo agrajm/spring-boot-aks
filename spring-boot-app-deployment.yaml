@@ -1,27 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: knote
+  name: spring-boot-aks
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: knote
+      app: spring-boot-aks
   template:
     metadata:
       labels:
-        app: knote
+        app: spring-boot-aks
     spec:
       containers:
         - name: app
-          image: agrajm/spring-boot-aks:v1.0
+          image: $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)
           ports:
           - containerPort: 8080
           env:
           - name: SPRING_DATASOURCE_URL
-            value: %{SPRING_DATASOURCE_URL}%
+            valueFrom:
+              secretKeyRef:
+                name: springsecret
+                key: url
           - name: SPRING_DATASOURCE_USERNAME
-            value: %{SPRING_DATASOURCE_USERNAME}%
+            valueFrom:
+              secretKeyRef:
+                name: springsecret
+                key: username
           - name: SPRING_DATASOURCE_PASSWORD
-            value: %{SPRING_DATASOURCE_PASSWORD}%
+              valueFrom:
+                secretKeyRef:
+                  name: springsecret
+                  key: password
           imagePullPolicy: Always

@@ -59,27 +59,40 @@ stages:
   displayName: Deploy
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   jobs:
-  - job: Deploy
+  - deployment: DeployApp
+    displayName: Deploy to Dev
     pool:
       vmImage: ubuntu-latest
-    steps:
-    - task: AzureCLI@2
-      displayName: "Update the Deployment with Latest Image & deploy to AKS"
-      inputs:
-        azureSubscription: azureServiceConnection
-        scriptType: bash
-        scriptLocation: inlineScript
-        failOnStandardError: true
-        inlineScript: |
-          echo "the build number in deploy is $(Build.BuildNumber)"
-          echo "Todo: Add deployment steps"
-          echo "Todo: Explore Approvals & Environments"
-    - task: qetza.replacetokens.replacetokens-task.replacetokens@3
-      displayName: 'Replace tokens by secrets'
-      inputs:
-        targetFiles: |
-          **/application.properties
-        actionOnMissing: 'log warning'
-        tokenPrefix: '%{'
-        tokenSuffix: '}%'
-        verbosity: 'detailed'
+    environment: 'dev-k8s'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+              displayName: 'Replace tokens by secrets'
+              inputs:
+                targetFiles: |
+                  **/*deployment.yaml
+                actionOnMissing: 'log warning'
+                tokenPrefix: '$('
+                tokenSuffix: ')'
+                verbosity: 'detailed'
+            - task: AzureCLI@2
+              displayName: "Update the Deployment with Latest Image & deploy to AKS"
+              inputs:
+                azureSubscription: azureServiceConnection
+                scriptType: bash
+                scriptLocation: inlineScript
+                failOnStandardError: true
+                inlineScript: |
+                  echo "the build number in deploy is $(Build.BuildNumber)"
+                  az aks show --name $(AKS_CLUSTER_NAME} --resource-group $(AKS_RESOURCE_GROUP)
+                  echo "kube config is $KUBECONFIG"
+                  export KUBECONFIG=$(pwd)/.kubeconfig-${AKS_CLUSTER_NAME}
+                  wget https://github.com/Azure/kubelogin/releases/download/v0.0.9/kubelogin-linux-amd64.zip
+                  unzip kubelogin-linux-amd64.zip
+                  sudo mv bin/linux_amd64/kubelogin /usr/local/bin
+                  kubelogin --help
+                  kubelogin convert-kubeconfig -l azurecli
+                  kubectl get nodes
+

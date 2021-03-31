@@ -57,7 +57,7 @@ stages:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathToPublish: '$(Build.DefaultWorkingDirectory)/deploy'
+        pathToPublish: '/deploy'
         artifactName: manifests
 
 - stage: deploy

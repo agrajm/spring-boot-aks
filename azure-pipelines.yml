@@ -100,7 +100,7 @@ stages:
               inlineScript: |
                 export DEPLOYMENT_IMAGE_TAG="$(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)"
                 ls -la
-                sed -i -e 's/DEPLOYMENT_IMAGE/$DEPLOYMENT_IMAGE_TAG/g' $(Agent.BuildDirectory)/manifests/spring-boot-app-deployment.yaml
+                sed -i -e 's/DEPLOYMENT_IMAGE/'$DEPLOYMENT_IMAGE_TAG'/g' $(Agent.BuildDirectory)/manifests/spring-boot-app-deployment.yaml
                 cat $(Agent.BuildDirectory)/manifests/spring-boot-app-deployment.yaml
                 export KUBECONFIG=$(pwd)/.kubeconfig-$(AKS_CLUSTER_NAME)
                 az aks get-credentials --resource-group $(RESOURCE_GROUP_NAME) --name $(AKS_CLUSTER_NAME) --overwrite-existing --file $KUBECONFIG

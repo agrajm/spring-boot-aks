@@ -89,6 +89,17 @@ stages:
                 unzip kubelogin-linux-amd64.zip
                 sudo mv ./bin/linux_amd64/kubelogin /usr/local/bin/kubelogin
                 sudo chmod +x /usr/local/bin/kubelogin
+
+          - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+            displayName: 'Replace tokens by secrets'
+            inputs:
+              targetFiles: |
+                $(Agent.BuildDirectory)/manifests/**yaml
+              actionOnMissing: 'log warning'
+              tokenPrefix: '#{'
+              tokenSuffix: '}#'
+              verbosity: 'detailed'
+
           - task: AzureCLI@2
             displayName: "Update the Deployment with Latest Image & deploy to AKS"
             inputs:
@@ -99,8 +110,8 @@ stages:
               inlineScript: |
                 export DEPLOYMENT_IMAGE_TAG="$(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)"
                 ls -la
-                sed -i -e 's/DEPLOYMENT_IMAGE/$DEPLOYMENT_IMAGE_TAG/g' $(Agent.BuildDirectory)/spring-boot-app-deployment.yaml
+                sed -i -e 's/DEPLOYMENT_IMAGE/$DEPLOYMENT_IMAGE_TAG/g' $(Agent.BuildDirectory)/manifests/spring-boot-app-deployment.yaml
                 export KUBECONFIG=$(pwd)/.kubeconfig-$(AKS_CLUSTER_NAME)
                 az aks get-credentials --resource-group $(RESOURCE_GROUP_NAME) --name $(AKS_CLUSTER_NAME) --overwrite-existing --file $KUBECONFIG
                 kubelogin convert-kubeconfig -l azurecli
-                kubectl apply -f $(Agent.BuildDirectory)/spring-boot-app-deployment.yaml
+                kubectl apply -f $(Agent.BuildDirectory)/manifests/*

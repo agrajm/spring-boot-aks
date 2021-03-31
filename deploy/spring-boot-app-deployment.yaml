@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)
+          image: DEPLOYMENT_IMAGE
           ports:
           - containerPort: 8080
           env:

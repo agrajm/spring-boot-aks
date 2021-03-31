@@ -66,6 +66,9 @@ stages:
     environment: 'dev-k8s'
     strategy:
       runOnce:
+        preDeploy:
+          steps:
+          - checkout: self
         deploy:
           steps:
           - task: AzureCLI@2

@@ -72,7 +72,7 @@ stages:
               displayName: 'Replace tokens by secrets'
               inputs:
                 targetFiles: |
-                  deploy/*.yaml
+                  deploy/**.yaml
                 actionOnMissing: 'log warning'
                 tokenPrefix: '$('
                 tokenSuffix: ')'

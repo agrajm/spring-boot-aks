@@ -55,6 +55,11 @@ stages:
           docker build -t $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber) .
           docker push $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)
 
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.DefaultWorkingDirectory)/deploy'
+        artifactName: manifests
+
 - stage: deploy
   displayName: Deploy
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
@@ -66,11 +71,29 @@ stages:
     environment: 'dev-k8s'
     strategy:
       runOnce:
-        preDeploy:
-          steps:
-          - checkout: self
         deploy:
           steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'manifests'
+              downloadPath: '$(System.ArtifactsDirectory)'
+
+          - task: Bash@3
+            displayName: 'Install kubelogin'
+            inputs:
+              failOnStderr: false
+              targetType: 'inline'
+              script: |
+                export KUBECONFIG=$(pwd)/.kubeconfig-$(AKS_CLUSTER_NAME)
+                echo "kube config is $KUBECONFIG"
+                kubelogin_latest_tag=$(curl -fsSL https://api.github.com/repos/Azure/kubelogin/releases/latest | jq -r '.tag_name')
+                kubelogin_download_url="https://github.com/Azure/kubelogin/releases/download/${kubelogin_latest_tag}/kubelogin-linux-amd64.zip"
+                curl -fsSLO "${kubelogin_download_url}"
+                unzip kubelogin-linux-amd64.zip
+                sudo mv ./bin/linux_amd64/kubelogin /usr/local/bin/kubelogin
+                sudo chmod +x /usr/local/bin/kubelogin
           - task: AzureCLI@2
             displayName: "Update the Deployment with Latest Image & deploy to AKS"
             inputs:
@@ -80,16 +103,9 @@ stages:
               failOnStandardError: true
               inlineScript: |
                 export DEPLOYMENT_IMAGE_TAG="$(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)"
-                echo "the build image is $DEPLOYMENT_IMAGE_TAG"
-                echo "current dir $(System.DefaultWorkingDirectory)"
-                echo "listing directory $(pwd)"
                 ls -la
-                #sed -i -e 's/DEPLOYMENT_IMAGE/$DEPLOYMENT_IMAGE_TAG/g' deploy/spring-boot-app-deployment.yaml
+                sed -i -e 's/DEPLOYMENT_IMAGE/$DEPLOYMENT_IMAGE_TAG/g' $(Agent.BuildDirectory)/spring-boot-app-deployment.yaml
                 export KUBECONFIG=$(pwd)/.kubeconfig-$(AKS_CLUSTER_NAME)
-                echo "kube config is $KUBECONFIG"
                 az aks get-credentials --resource-group $(RESOURCE_GROUP_NAME) --name $(AKS_CLUSTER_NAME) --overwrite-existing --file $KUBECONFIG
-                wget https://github.com/Azure/kubelogin/releases/download/v0.0.9/kubelogin-linux-amd64.zip
-                unzip kubelogin-linux-amd64.zip
-                sudo mv bin/linux_amd64/kubelogin /usr/local/bin
                 kubelogin convert-kubeconfig -l azurecli
-                kubectl apply -f deploy/*
+                kubectl apply -f $(Agent.BuildDirectory)/spring-boot-app-deployment.yaml

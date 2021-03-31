@@ -75,16 +75,6 @@ stages:
               artifactName: 'manifests'
               downloadPath: '$(System.ArtifactsDirectory)'
 
-#          - task: qetza.replacetokens.replacetokens-task.replacetokens@3
-#            displayName: 'Update tag for deployment image'
-#            inputs:
-#              targetFiles: |
-#                $(System.ArtifactsDirectory)/manifests/**yaml
-#              actionOnMissing: 'log warning'
-#              tokenPrefix: '#{'
-#              tokenSuffix: '}#'
-#              verbosity: 'detailed'
-
           - task: Bash@3
             displayName: 'Install kubelogin'
             inputs:

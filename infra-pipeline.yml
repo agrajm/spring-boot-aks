@@ -35,9 +35,4 @@ steps:
       export TF_VAR_sql_server_admin_pwd=$(SQL-SERVER-ADMIN-PWD)
       terraform plan -out=infra.out
       terraform apply -auto-approve infra.out
-      # attach the ACR to AKS
-      ACR_NAME=$(terraform output -raw acr_name)
-      AKS_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
-      AKS_RESOURCE_GROUP=$(terraform output -raw aks_resource_group)
-      #az aks update --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --attach-acr $ACR_NAME
 

@@ -78,13 +78,15 @@ stages:
               inlineScript: |
                 export DEPLOYMENT_IMAGE_TAG="$(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)"
                 echo "the build image is $DEPLOYMENT_IMAGE_TAG"
-                sed -i -e 's/DEPLOYMENT_IMAGE/$DEPLOYMENT_IMAGE_TAG/g' deploy/spring-boot-app-deployment.yaml
+                echo "current dir $(System.DefaultWorkingDirectory)"
+                echo "listing directory $(pwd)"
+                ls -la
+                #sed -i -e 's/DEPLOYMENT_IMAGE/$DEPLOYMENT_IMAGE_TAG/g' deploy/spring-boot-app-deployment.yaml
                 export KUBECONFIG=$(pwd)/.kubeconfig-$(AKS_CLUSTER_NAME)
                 echo "kube config is $KUBECONFIG"
                 az aks get-credentials --resource-group $(RESOURCE_GROUP_NAME) --name $(AKS_CLUSTER_NAME) --overwrite-existing --file $KUBECONFIG
                 wget https://github.com/Azure/kubelogin/releases/download/v0.0.9/kubelogin-linux-amd64.zip
                 unzip kubelogin-linux-amd64.zip
-                #sudo mv bin/linux_amd64/kubelogin /usr/local/bin
-                echo "kubelogin installed"
-                ./bin/linux_amd64/kubelogin convert-kubeconfig -l azurecli
+                sudo mv bin/linux_amd64/kubelogin /usr/local/bin
+                kubelogin convert-kubeconfig -l azurecli
                 kubectl apply -f deploy/*

@@ -29,8 +29,8 @@ spec:
                 name: springsecret
                 key: username
           - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: springsecret
-                  key: password
+            valueFrom:
+              secretKeyRef:
+                name: springsecret
+                key: password
           imagePullPolicy: Always

@@ -39,3 +39,14 @@ output "aks_cluster_name" {
   value = "${var.aks-prefix}-aks"
 }
 
+output "managed_identity_resource_id" {
+  value = azurerm_user_assigned_identity.managed_identity.id
+}
+
+output "managed_identity_client_id" {
+  value = azurerm_user_assigned_identity.managed_identity.client_id
+}
+
+output "managed_identity_principal_id" {
+  value = azurerm_user_assigned_identity.managed_identity.principal_id
+}

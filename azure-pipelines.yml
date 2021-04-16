@@ -1,107 +1,51 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
 trigger:
-- master
+- main
 
 variables:
-- group: terraformVariableGroup  # non-secret values
-- group: secretVariableGroup
+- group: buildVariableGroup      # variables for build pipeline (terraform state)
+- group: terraformVariableGroup  # non-secret values 
+- group: secretVariables         # secret values from key vault 
 
 pool:
   vmImage: ubuntu-latest
 
-stages:
-- stage: build
-  displayName: Build
-  jobs:
-  - job: Build
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: qetza.replacetokens.replacetokens-task.replacetokens@3
-      displayName: 'Replace tokens by secrets'
-      inputs:
-        targetFiles: |
-          **/application.properties
-        actionOnMissing: 'log warning'
-        tokenPrefix: '#{'
-        tokenSuffix: '}#'
-        verbosity: 'detailed'
+steps:
 
-    - task: Maven@3
-      displayName: 'Build & Run Test Cases'
-      inputs:
-        mavenPomFile: 'pom.xml'
-        mavenOptions: '-Xmx3072m'
-        javaHomeOption: 'JDKVersion'
-        jdkVersionOption: '1.11'
-        jdkArchitectureOption: 'x64'
-        publishJUnitResults: true
-        testResultsFiles: '**/surefire-reports/TEST-*.xml'
-        goals: 'package'
+- task: AzureCLI@2
+  displayName: "Using Terraform to build Infrastructure"
+  inputs:
+    azureSubscription: azureServiceConnection
+    scriptType: bash
+    scriptLocation: inlineScript
+    failOnStandardError: true
+    workingDirectory: $(System.DefaultWorkingDirectory)/src/terraform
+    addSpnToEnvironment: true
+    inlineScript: |
+      export ARM_CLIENT_ID=$servicePrincipalId
+      export ARM_CLIENT_SECRET=$servicePrincipalKey
+      export ARM_TENANT_ID=$tenantId
+      export ARM_SUBSCRIPTION_ID=$(az account show --query id | xargs)
+      export ACCESS_KEY=$(az keyvault secret show --name tfstate-storage-key --vault-name $KEYVAULT_NAME --query value -o tsv)
+      terraform init \
+        -backend-config="storage_account_name=$TF_STATE_STORAGE_ACCOUNT_NAME" \
+        -backend-config="container_name=$TF_STATE_CONTAINER_NAME" \
+        -backend-config="key=terraform-ref-architecture-tfstate" \
+        -backend-config="access_key=$ACCESS_KEY"
+      export TF_VAR_aks_admin_group_id=$(aks-admin-group-object-id)
+      export TF_VAR_sql_db_name=$(SQL-DB-NAME)
+      export TF_VAR_sql_server_name=$(SQL-SERVER-NAME)
+      export TF_VAR_sql_server_admin_login=$(SQL-SERVER-ADMIN-LOGIN)
+      export TF_VAR_sql_server_admin_pwd=$(SQL-SERVER-ADMIN-PWD)
+      terraform plan -out=infra.out
+      terraform apply -auto-approve infra.out
+      # attach the ACR to AKS
+      ACR_NAME=$(terraform output -raw acr_name)
+      AKS_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
+      AKS_RESOURCE_GROUP=$(terraform output -raw aks_resource_group)
+      #az aks update --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --attach-acr $ACR_NAME
 
-    - task: AzureCLI@2
-      displayName: "Docker Build & Push"
-      inputs:
-        azureSubscription: azureServiceConnection
-        scriptType: bash
-        scriptLocation: inlineScript
-        failOnStandardError: true
-        inlineScript: |
-          az acr login -n $(ACR_NAME)
-          docker build -t $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber) .
-          docker push $(ACR_LOGIN_SERVER)/$(ACR_REPO_NAME):$(Build.BuildNumber)
-
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathToPublish: '$(System.DefaultWorkingDirectory)/deploy'
-        artifactName: manifests
-
-- stage: deploy
-  displayName: Deploy
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  jobs:
-  - deployment: DeployApp
-    displayName: Deploy to Dev
-    pool:
-      vmImage: ubuntu-latest
-    environment: 'dev-k8s'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: DownloadBuildArtifacts@0
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'manifests'
-              downloadPath: '$(System.ArtifactsDirectory)'
-
-          - task: Bash@3
-            displayName: 'Install kubelogin'
-            inputs:
-              failOnStderr: false
-              targetType: 'inline'
-              script: |
-                export KUBECONFIG=$(pwd)/.kubeconfig-$(AKS_CLUSTER_NAME)
-                echo "kube config is $KUBECONFIG"
-                kubelogin_latest_tag=$(curl -fsSL https://api.github.com/repos/Azure/kubelogin/releases/latest | jq -r '.tag_name')
-                kubelogin_download_url="https://github.com/Azure/kubelogin/releases/download/${kubelogin_latest_tag}/kubelogin-linux-amd64.zip"
-                curl -fsSLO "${kubelogin_download_url}"
-                unzip kubelogin-linux-amd64.zip
-                sudo mv ./bin/linux_amd64/kubelogin /usr/local/bin/kubelogin
-                sudo chmod +x /usr/local/bin/kubelogin
-
-          - task: AzureCLI@2
-            displayName: "Update the Deployment with Latest Image & deploy to AKS"
-            inputs:
-              azureSubscription: azureServiceConnection
-              scriptType: bash
-              scriptLocation: inlineScript
-              failOnStandardError: true
-              inlineScript: |
-                export BuildTag=$(Build.BuildNumber)
-                sed -i -e 's|${TAG}|'$BuildTag'|g' $(Agent.BuildDirectory)/manifests/spring-boot-app-deployment.yaml
-                cat $(Agent.BuildDirectory)/manifests/spring-boot-app-deployment.yaml
-                export KUBECONFIG=$(pwd)/.kubeconfig-$(AKS_CLUSTER_NAME)
-                az aks get-credentials --resource-group $(RESOURCE_GROUP_NAME) --name $(AKS_CLUSTER_NAME) --overwrite-existing --file $KUBECONFIG
-                kubelogin convert-kubeconfig -l azurecli
-                kubectl apply -f $(Agent.BuildDirectory)/manifests/*

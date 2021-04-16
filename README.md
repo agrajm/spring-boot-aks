@@ -1,9 +1,12 @@
 # Introduction 
-A pretty simple Spring boot project that communicates with Azure SQL DB and keeps secrets in Azure Key Vault, runs in Azure Kubernetes Service, communicates with both AKV and Azure SQL over Private Link. This project and the associated DevOps pipelines can be seen and used as a starting point for your actual project in Azure. 
+A pretty simple Spring boot project that communicates with Azure SQL DB and keeps secrets in Azure Key Vault, runs in Azure Kubernetes Service, communicates with both AKV and Azure SQL over Private Link.
+This project and the associated DevOps pipelines can be seen and used as a starting point for your actual project in Azure. The final architecture looks like 
+
+TODO: Add architecture diagram 
 
 # Getting Started
-Follow the set of articles I plan to write as I go through this journey
-1. The first article will set up the initial infrastructure in Azure using Terraform and Azure Devops. Then we dockerize the app and push it to a container registry -- all from our pipelines and finally deploy the build to AKS using kubelogin, again from our pipeline. Check out [this article](https://agraj.medium.com/running-your-microservices-securely-on-aks-417a110b2e76) to follow along. 
+1. Fork/Clone the repo and run the Build pipeline to build the infrastructure in Azure.
+2. Run the Deploy pipeline to deploy the Spring Boot App 
 
 # Pre-requisite
 

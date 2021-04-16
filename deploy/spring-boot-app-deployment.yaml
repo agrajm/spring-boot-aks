@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: spbootacr2021am.azurecr.io/spring-boot-aks:v1.0.3
+          image: spbootacr2021am.azurecr.io/spring-boot-aks:${TAG}
           ports:
           - containerPort: 8080
           imagePullPolicy: Always

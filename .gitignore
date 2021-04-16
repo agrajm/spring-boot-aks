@@ -42,3 +42,6 @@ build/
 *.tfvars
 **/*.out
 **/private_ssh_key
+
+### Spring ###
+**/application-dev.properties

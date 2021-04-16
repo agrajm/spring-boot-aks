@@ -1,0 +1,53 @@
+variables:
+- group: buildVariableGroup
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: |
+    echo "Building Infrastructure for running Spring Boot App in Azure"
+  displayName: 'Building Infrastructure for running Spring Boot App in Azure'
+
+# Setup Azure storage for storing Terraform state
+- task: AzureCLI@2
+  displayName: Azure CLI
+  inputs:
+    azureSubscription: azureServiceConnection
+    scriptType: bash
+    scriptLocation: inlineScript
+    failOnStandardError: true
+    inlineScript: |
+      echo "Creating $COMMON_RESOURCE_GROUP_NAME resource group..."
+      az group create -n $COMMON_RESOURCE_GROUP_NAME -l $LOCATION
+      echo "Creating $TF_STATE_STORAGE_ACCOUNT_NAME storage account..."
+      az storage account create -g $COMMON_RESOURCE_GROUP_NAME -l $LOCATION \
+          --name $TF_STATE_STORAGE_ACCOUNT_NAME \
+          --sku Standard_LRS \
+          --encryption-services blob
+      echo "Storage account $TF_STATE_STORAGE_ACCOUNT_NAME created."
+      echo "Retrieving storage account key..."
+      ACCOUNT_KEY=$(az storage account keys list --resource-group $COMMON_RESOURCE_GROUP_NAME --account-name $TF_STATE_STORAGE_ACCOUNT_NAME --query [0].value -o tsv)
+      echo "Storage account key retrieved."
+      echo "Creating $TF_STATE_CONTAINER_NAME storage container..."
+      az storage container create --name $TF_STATE_CONTAINER_NAME \
+            --account-name $TF_STATE_STORAGE_ACCOUNT_NAME \
+            --account-key $ACCOUNT_KEY
+      echo "Storage container $TF_STATE_CONTAINER_NAME created."
+      echo "Creating $KEYVAULT_NAME key vault..."
+      az keyvault create -g $COMMON_RESOURCE_GROUP_NAME -l $LOCATION --name $KEYVAULT_NAME
+      echo "Key vault $KEYVAULT_NAME created."
+      echo "Store storage access key into key vault secret..."
+      az keyvault secret set --name tfstate-storage-key --value $ACCOUNT_KEY --vault-name $KEYVAULT_NAME
+      echo "Key vault secret created."
+      echo "TODO - Create SP for Build Pipeline and putting that in Key Vault -- Not Able to Put that in Pipeline"
+      echo "Execute the below locally from CLI"
+#      tenantId=$(az account show --query tenantId -o tsv)
+#      subscriptionId=$(az account show --query id -o tsv)
+#      appId="spring-azdo-tf-app"
+#      password=$(az ad sp create-for-rbac -n $appId --query "password" -o tsv)
+#      servicePrincipalAppId=$(az ad sp list --display-name $appId --query "[].appId" -o tsv)
+#      az keyvault secret set --vault-name $KEYVAULT_NAME -n kv-subscription-id --value $subscriptionId
+#      az keyvault secret set --vault-name $KEYVAULT_NAME -n kv-tenant-id --value $tenantId
+#      az keyvault secret set --vault-name $KEYVAULT_NAME -n kv-sp-password --value $password
+#      az keyvault secret set --vault-name $KEYVAULT_NAME -n kv-sp-app-id --value $servicePrincipalAppId

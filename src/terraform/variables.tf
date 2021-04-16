@@ -93,3 +93,17 @@ variable "acr_name" {
   type = string
   default = "spbootacr2021am"
 }
+
+variable "keyvault_name" {
+  type = string
+  default = "spbootkeyv2021am"
+}
+
+variable "managed_identity_name" {
+  type = string
+  default = "spbootmi2021am"
+}
+
+variable "tenant_id" {
+  type = string
+}

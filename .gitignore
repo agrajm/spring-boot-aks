@@ -40,6 +40,8 @@ build/
 **/*.lock.hcl
 **/.terraform
 *.tfvars
+**/*.out
+**/private_ssh_key
 
-## Spring Properties ##
-**/*dev.properties
+### Spring ###
+**/application-dev.properties

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: spring-boot-aks
+  namespace: spboot-app
 spec:
   replicas: 1
   selector:
@@ -11,26 +12,29 @@ spec:
     metadata:
       labels:
         app: spring-boot-aks
+        namespace: spboot-app
+        aadpodidbinding: spboot-pod-identity
+        department: csu
+        owner: agrajm
     spec:
       containers:
         - name: app
           image: spbootacr2021am.azurecr.io/spring-boot-aks:${TAG}
           ports:
           - containerPort: 8080
-          env:
-          - name: SPRING_DATASOURCE_URL
-            valueFrom:
-              secretKeyRef:
-                name: springsecret
-                key: url
-          - name: SPRING_DATASOURCE_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: springsecret
-                key: username
-          - name: SPRING_DATASOURCE_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: springsecret
-                key: password
           imagePullPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: spboot-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: spring-boot-aks
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

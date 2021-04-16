@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
+- master
 
 variables:
 - group: buildVariableGroup      # variables for build pipeline (terraform state)

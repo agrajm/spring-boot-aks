@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-unprivileged
+  labels:
+    department: test
+    owner: tester
+spec:
+  containers:
+    - name: nginx-unprivileged
+      image: mcr.microsoft.com/oss/nginx/nginx:1.15.5-alpine

@@ -107,3 +107,9 @@ variable "managed_identity_name" {
 variable "tenant_id" {
   type = string
 }
+
+# Private Endpoint
+variable "private-ep-subnet-address" {
+  type = string
+  default = "10.5.1.0/28"
+}

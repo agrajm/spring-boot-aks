@@ -50,3 +50,7 @@ output "managed_identity_client_id" {
 output "managed_identity_principal_id" {
   value = azurerm_user_assigned_identity.managed_identity.principal_id
 }
+
+output "sql_private_link_endpoint_ip" {
+  value = data.azurerm_private_endpoint_connection.sql_plink_pe_conn.private_service_connection.0.private_ip_address
+}

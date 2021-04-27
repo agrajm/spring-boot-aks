@@ -10,6 +10,11 @@ resource "azurerm_key_vault" "secretstore" {
 
   sku_name = "standard"
 
+//  network_acls {
+//    bypass = "None"
+//    default_action = "Deny"
+//  }
+
   # Access Policy to assign GET & LIST secret access to Managed Identity
 //  access_policy {
 //    tenant_id = var.tenant_id

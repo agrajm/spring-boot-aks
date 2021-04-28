@@ -48,7 +48,7 @@ resource "azurerm_route_table" "rt" {
   depends_on = [azurerm_firewall.fw]
 }
 
-//resource "azurerm_subnet_route_table_association" "aks_subnet_association" {
-//  subnet_id      = azurerm_subnet.akssubnet.id
-//  route_table_id = azurerm_route_table.rt.id
-//}
+resource "azurerm_subnet_route_table_association" "aks_subnet_association" {
+  subnet_id      = azurerm_subnet.akssubnet.id
+  route_table_id = azurerm_route_table.rt.id
+}

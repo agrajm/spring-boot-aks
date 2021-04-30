@@ -8,19 +8,19 @@ output "aks_kubeconfig_cmd" {
 }
 
 output "kube_admin_config_raw" {
-  value = azurerm_kubernetes_cluster.aks1.kube_config_raw
+  value = azurerm_kubernetes_cluster.aks.kube_config_raw
 }
 
 output "aks_host"{
-  value = azurerm_kubernetes_cluster.aks1.fqdn
+  value = azurerm_kubernetes_cluster.aks.fqdn
 }
 
 output "aks_node_resource_group" {
-  value = azurerm_kubernetes_cluster.aks1.node_resource_group
+  value = azurerm_kubernetes_cluster.aks.node_resource_group
 }
 
 output "aks_id" {
-  value = azurerm_kubernetes_cluster.aks1.id
+  value = azurerm_kubernetes_cluster.aks.id
 }
 
 output "aks_resource_group" {

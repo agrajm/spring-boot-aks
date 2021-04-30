@@ -1,4 +1,4 @@
-resource "azurerm_kubernetes_cluster" "aks1" {
+resource "azurerm_kubernetes_cluster" "aks" {
   dns_prefix = "${var.aks-prefix}-aks"
   location = azurerm_resource_group.core.location
   name = "${var.aks-prefix}-aks"
@@ -61,7 +61,7 @@ resource "azurerm_kubernetes_cluster" "aks1" {
     type = "SystemAssigned"
   }
 
-  private_cluster_enabled = false
+  private_cluster_enabled = true
 
   depends_on = [azurerm_subnet.akssubnet]
 }
@@ -100,7 +100,7 @@ resource "azurerm_container_registry" "acr" {
   sku                      = "Standard"
   admin_enabled            = false
 
-  depends_on = [azurerm_kubernetes_cluster.aks1]
+  depends_on = [azurerm_kubernetes_cluster.aks]
 
   provisioner local-exec {
     command                    = "az aks update --resource-group ${azurerm_resource_group.core.name} --name ${var.aks-prefix}-aks --attach-acr ${var.acr_name}"

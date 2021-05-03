@@ -63,7 +63,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   private_cluster_enabled = true
 
-  depends_on = [azurerm_route_table.rt, azurerm_subnet_route_table_association.aks_subnet_association]
+  depends_on = [azurerm_subnet.akssubnet,
+    azurerm_route_table.rt,
+    azurerm_subnet_route_table_association.aks_subnet_association]
 }
 
 resource "azurerm_log_analytics_workspace" "main" {

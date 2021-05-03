@@ -149,3 +149,13 @@ variable "log_retention_in_days" {
   type        = number
   default     = 30
 }
+
+variable "az-bastion-subnet-address" {
+  type = string
+  default = "10.5.3.0/27"
+}
+
+variable "az-jumpbox-subnet-address" {
+  type = string
+  default = "10.5.3.32/27"
+}

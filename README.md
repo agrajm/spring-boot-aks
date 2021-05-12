@@ -1,6 +1,8 @@
 # Introduction 
 A pretty simple Spring boot project that communicates with Azure SQL DB and keeps secrets in Azure Key Vault, runs in Azure Kubernetes Service, communicates with both AKV and Azure SQL over Private Link. This project and the associated DevOps pipelines can be seen and used as a starting point for your actual project in Azure. The final architecture looks like 
 
+![Final Architecture](images/private-aks-architecture.png)
+
 # Getting Started
 This has been broken down into following set of articles:
 
